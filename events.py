@@ -17,7 +17,7 @@ tz = tzlocal()
 now = datetime.now().astimezone(tz)
 
 DATE_FMT = "%a, %b %d @ %H:%M"
-duration_regex = re.compile(r'((?P<hours>\d+?)h)?((?P<minutes>\d+?)m)?')
+duration_regex = re.compile(r'((?P<hours>-?\d+?)h)?((?P<minutes>-?\d+?)m)?')
 
 
 def parse_duration(s: str) -> timedelta:
@@ -25,6 +25,7 @@ def parse_duration(s: str) -> timedelta:
     if not parts:
         return
     parts = parts.groupdict()
+    print(parts)
     time_params = {}
     for (name, param) in parts.items():
         if param:
@@ -124,7 +125,13 @@ def events(url: str) -> None:
     return events
 
 
-def new_event(url: str, title: str, dt: datetime, loc: Optional[str] = None, duration: Optional[str] = None) -> None:
+def new_event(
+    url: str,
+    title: str,
+    dt: datetime,
+    loc: Optional[str] = None,
+    duration: Optional[str] = None,
+) -> None:
     cal = vobject.iCalendar()
     cal.add("vevent")
     cal.vevent.add("summary").value = title
@@ -135,6 +142,7 @@ def new_event(url: str, title: str, dt: datetime, loc: Optional[str] = None, dur
     if duration:
         cal.vevent.add("duration").value = parse_duration(duration)
     cal.vevent.add("valarm")
+    # FIXME(tsileo): parse_duration for the trigger
     cal.vevent.valarm.add("trigger").value = timedelta(hours=-4)
     cal.vevent.valarm.add("action").value = "DISPLAY"
     cal.vevent.valarm.add("description").value = title
